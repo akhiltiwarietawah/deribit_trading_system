@@ -32,50 +32,105 @@ int main() {
     double quantity = 40;
     double price = 6000.0;
     string orderId;
+    string label = "market0000234";
+    string symbol = "BTC-PERPETUAL";  
+
+
+
+    // start measuring end-to-end latency
+    auto overallStart = chrono::high_resolution_clock::now();
+
 
     // Place a market order
-    // string label = "market0000234";
-    // if (placeMarketOrder(accessToken, instrument, quantity, label, orderId)) {
-    //     cout << "Market order placed successfully." << endl;
-    // } else {
-    //     cerr << "Failed to place market order." << endl;
-    //     return 1;
-    // }
 
-    // Place a limit order
+    auto start = chrono::high_resolution_clock::now();
+    if (placeMarketOrder(accessToken, instrument, quantity, label, orderId)) {
+        cout << "Market order placed successfully." << endl;
+    } else {
+        cerr << "Failed to place market order." << endl;
+        return 1;
+    }
+
+    auto end = chrono::high_resolution_clock::now();
+    cout << "Market Order Placement Latency: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << " ms" << endl;
+
+
+    // // Place a limit order
+
+    // start = chrono::high_resolution_clock::now();
     // if (placeOrder(accessToken, instrument, quantity, price, orderId)) {
     //     cout << "Limit order placed successfully. Order ID: " << orderId << endl;    
     // } else {    
     //     cerr << "Failed to place order." << endl;    
     // }
+    // end = chrono::high_resolution_clock::now();
+    // cout << "Limit Order Placement Latency: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << " ms" << endl;
 
-    // Modify the order
-    // double newPrice = 66200.0;  
-    // double newAmount = 80;  
-    // if (modifyOrder(accessToken, orderId, newPrice, newAmount)) {
-    //     cout << "Order modified successfully." << endl;
-    // } else {
-    //     cerr << "Failed to modify order." << endl;
-    // }
 
-    // Cancel the order
-    // if (cancelOrder(accessToken, orderId)) {
-    //     cout << "Order canceled successfully." << endl;
-    // } else {
-    //     cerr << "Failed to cancel order." << endl;
-    // }
+    //get order status 
+    json orderStatus = getOrderStatus(accessToken, orderId);
+    if (!orderStatus.empty()) {
+        // cout << "Order status: " << orderStatus.dump(4) << endl;
+    } else {
+        cerr << "Failed to get order status." << endl;
+        return 1;
+    }
+
 
     // Get order book data
-    // string symbol = "BTC-PERPETUAL";  
-    // json orderBookData = getOrderBook(symbol);
-    // if (!orderBookData.empty()) {
-    //     cout << "Order Book for " << symbol << ":\n";
-    //     cout << orderBookData.dump(4) << endl;  
-    // 
 
-    // // Get current positions
-    // json positions = getCurrentPositions(accessToken);
-    // cout << "Current Positions: " << positions.dump(4) << endl;  
+    start = chrono::high_resolution_clock::now();
+
+    json orderBookData = getOrderBook(symbol);
+    if (!orderBookData.empty()) {
+        cout << "Order Book for " << symbol << ":\n";
+        cout << orderBookData.dump(4) << endl;  
+    }
+
+    end = chrono::high_resolution_clock::now();
+    cout << "Market Data processing Latency: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << " ms" << endl;
+
+
+    
+
+    // Modify the order
+    double newPrice = 66200.0;  
+    double newAmount = 80;  
+
+    start = chrono::high_resolution_clock::now();
+    if (modifyOrder(accessToken, orderId, newPrice, newAmount)) {
+        cout << "Order modified successfully." << endl;
+    } else {
+        cerr << "Failed to modify order." << endl;
+    }
+    end = chrono::high_resolution_clock::now();
+    cout << "Order Modification Latency: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << " ms" << endl;
+
+
+
+    // Cancel the order
+
+    start = chrono::high_resolution_clock::now();
+
+    if (cancelOrder(accessToken, orderId)) {
+        cout << "Order canceled successfully." << endl;
+    } else {
+        cerr << "Failed to cancel order." << endl;
+    }
+
+    end = chrono::high_resolution_clock::now();
+    cout << "Cancel order Latency: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << " ms" << endl;
+
+
+    // Get current positions
+    json positions = getCurrentPositions(accessToken);
+    cout << "Current Positions: " << positions.dump(4) << endl; 
+
+
+    // Measure overall latency
+    auto overallEnd = chrono::high_resolution_clock::now();
+    cout << "End-to-End Trading Loop Latency: " << chrono::duration_cast<chrono::milliseconds>(overallEnd - overallStart).count() << " ms" << endl;
+ 
 
     return 0;
 }

@@ -244,3 +244,48 @@ json getCurrentPositions(const string& accessToken) {
     }
     return {};
 }
+
+//function to view order status
+
+json getOrderStatus(const string& accessToken, const string& orderId) {
+    CURL* curl = curl_easy_init(); // Initialize cURL
+    string readBuffer;
+
+    if (curl) {
+        string url = "https://test.deribit.com/api/v2/private/get_order_state?order_id=" + orderId;
+
+        struct curl_slist* headers = nullptr;
+        headers = curl_slist_append(headers, ("Authorization: Bearer " + accessToken).c_str());
+        headers = curl_slist_append(headers, "Content-Type: application/json");
+
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
+
+        CURLcode res = curl_easy_perform(curl);
+        curl_easy_cleanup(curl);
+        curl_slist_free_all(headers);
+
+        if (res != CURLE_OK) {
+            cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << endl;
+            return {};
+        }
+
+        auto jsonResponse = json::parse(readBuffer);
+        if (jsonResponse.contains("result")) {
+            string orderState = jsonResponse["result"]["order_state"];
+            cout << "Order State: " << orderState << endl;
+
+            return jsonResponse["result"];
+        } else if (jsonResponse.contains("error")) {
+            cerr << "Error fetching order status: " << jsonResponse["error"]["message"] << endl;
+        } else {
+            cerr << "Unexpected response structure." << endl;
+        }
+    } else {
+        cerr << "Failed to initialize cURL." << endl;
+    }
+
+    return {};
+}

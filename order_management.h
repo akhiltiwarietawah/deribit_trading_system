@@ -10,6 +10,7 @@ bool placeOrder(const std::string& accessToken, const std::string& instrument, d
 bool placeMarketOrder(const std::string& accessToken, const std::string& instrument, double quantity, std::string label, std::string& orderId);
 nlohmann::json getOrderBook(const std::string& symbol); 
 nlohmann::json getCurrentPositions(const std::string& accessToken);
+nlohmann::json getOrderStatus(const std::string& accessToken, const std::string& orderId);
 
 #endif // ORDER_MANAGEMENT_H
 
