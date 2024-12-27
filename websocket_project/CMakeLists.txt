@@ -15,6 +15,12 @@ include_directories(${OPENSSL_INCLUDE_DIR})
 find_package(CURL REQUIRED)
 include_directories(${CURL_INCLUDE_DIRS})
 
+find_package(ZLIB REQUIRED)
+
+# Manually set LZ4 include and library directories 
+include_directories(/usr/include) 
+link_directories(/usr/lib/x86_64-linux-gnu)
+
 # Include WebSocket++ directory
 include_directories(/usr/local/include/websocketpp)  # Ensure this path is correct
 
@@ -22,4 +28,11 @@ include_directories(/usr/local/include/websocketpp)  # Ensure this path is corre
 add_executable(websocket_project src/websocket_server.cpp)
 
 # Link Boost libraries, OpenSSL, pthread, and cURL
-target_link_libraries(websocket_project ${Boost_LIBRARIES} ${OPENSSL_LIBRARIES} pthread ${CURL_LIBRARIES})
+target_link_libraries(websocket_project ${Boost_LIBRARIES} ${OPENSSL_LIBRARIES} 
+                        ZLIB::ZLIB
+                       lz4
+                        pthread ${CURL_LIBRARIES})
+
+
+# Print a message to indicate successful configuration 
+message("Configuration successful!")

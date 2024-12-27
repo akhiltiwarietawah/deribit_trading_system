@@ -4,7 +4,8 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/home/akhil/dev-tools/vcpkg/installed/x64-linux/include", // Replace with actual path
+                "/home/akhil/dev-tools/vcpkg/installed/x64-linux/include",
+                 // Replace with actual path
 
                 "/usr/include/c++/11", 
                 "/usr/include/x86_64-linux-gnu/c++/11",
