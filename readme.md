@@ -220,8 +220,82 @@ This documentation provides a detailed analysis of the bottlenecks identified, t
           if (stop) {
               throw std::runtime_error("enqueue on stopped ThreadPool");
           }
-          tasks.emplace(std::move(task));
+                    tasks.emplace(task);
       }
       condition.notify_one();
   }
+
+  void ThreadPool::workerThread() {
+      while (true) {
+          function<void()> task;
+          {
+              unique_lock<mutex> lock(queueMutex);
+              condition.wait(lock, [this] { return stop || !tasks.empty(); });
+              if (stop && tasks.empty()) return;
+              task = move(tasks.front());
+              tasks.pop();
+          }
+          task();
+      }
+  }
+
   ```
+
+
+
+### CPU Optimization
+- **Optimization Choice:** Asynchronous Tasks and Parallel Execution
+  - **Justification:** Using asynchronous tasks and parallel execution helps to leverage the CPU’s capabilities fully, allowing for concurrent execution of tasks and reducing overall latency.
+  - **Implementation:**
+  ```cpp
+  bool OrderAPI::performAsyncCurlRequest(const std::string& url, const std::string& accessToken, std::string& response) {
+      auto task = std::async(std::launch::async, [&]() {
+          return performCurlRequest(url, accessToken, response);
+      });
+      return task.get();
+  }
+
+  bool OrderAPI::performBatchAsyncCurlRequest(const std::vector<std::string>& urls, const std::string& accessToken, std::vector<std::string>& responses) {
+      std::vector<std::future<bool>> futures;
+      for (const auto& url : urls) {
+          futures.push_back(std::async(std::launch::async, [&]() {
+              std::string response;
+              bool result = performCurlRequest(url, accessToken, response);
+              responses.push_back(std::move(response));
+              return result;
+          }));
+      }
+      bool allSuccessful = true;
+      for (auto& future : futures) {
+          allSuccessful &= future.get();
+      }
+      return allSuccessful;
+  }
+  ```
+
+## Potential Further Improvements
+
+### Asynchronous I/O
+- **Description:** Further improve network communication by leveraging asynchronous I/O for non-blocking operations. This allows the application to continue processing other tasks while waiting for I/O operations to complete, improving overall responsiveness.
+- **Implementation:** Consider using libraries like `boost::asio` or `libuv` for asynchronous network operations.
+
+### Advanced Data Structures
+- **Description:** Implement more advanced data structures, such as concurrent hash maps, for efficient data management. These data structures provide thread-safe access and modification without the need for locks.
+- **Implementation:** Look into using concurrent data structures from libraries like Intel TBB or concurrent hash maps provided by the standard library.
+
+### Profiling Tools
+- **Description:** Use profiling tools to identify and optimize additional hotspots in the codebase. Profiling helps to pinpoint specific areas of the code that may benefit from further optimization.
+- **Implementation:** Utilize profiling tools like `gprof`, `Valgrind`, or `Intel VTune` to gather detailed performance data and identify bottlenecks.
+
+### Code Refactoring
+- **Description:** Continuously refactor code to improve readability, maintainability, and performance. Clean, well-structured code is easier to optimize and debug.
+- **Implementation:** Regularly review and refactor the codebase to ensure it follows best practices and is optimized for performance.
+
+### Parallel Data Processing
+- **Description:** Further optimize data processing by implementing parallel algorithms and leveraging multi-threading for data-intensive tasks.
+- **Implementation:** Use parallel algorithms from libraries like Intel TBB, OpenMP, or the Parallel STL to process data in parallel.
+
+## Conclusion
+
+By implementing these optimizations, significant improvements in the performance of the trading system have been achieved. The documented changes and potential further improvements provide a strong foundation for maintaining and enhancing the system's efficiency and responsiveness.
+
